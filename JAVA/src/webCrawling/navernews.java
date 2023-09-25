@@ -7,7 +7,11 @@
  * 2023-09-25 Second Commit
  * 네이버 뉴스 IT/과학카테고리의 IT일반 탭의 뉴스를 크롤링합니다.
  * 뉴스의 헤드라인만 GUI창에 출력합니다.
+ * 
+ * 2023-09-25 3rd Commit
+ * GUI창의 헤드라인을 클릭하면 기사본문으로 이동합니다.
  */
+
 package webCrawling;
 
 import javafx.application.Application;
@@ -23,7 +27,12 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.awt.*;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class navernews extends Application {
 
@@ -43,6 +52,8 @@ public class navernews extends Application {
         primaryStage.show();
 
         int page = 5;
+
+        List<String> articleUrls = new ArrayList<>();
 
         for (int j = 1; j <= page; j++) {
             String url = "https://news.naver.com/main/list.naver?mode=LS2D&mid=shm&sid1=105&sid2=230&date=20230925&page=" + j;
@@ -69,6 +80,7 @@ public class navernews extends Application {
 
                     // 결과를 GUI에 추가
                     items.add(title);
+                    articleUrls.add(articleUrl);
 
                     System.out.println(title);
                     System.out.println();
@@ -77,6 +89,24 @@ public class navernews extends Application {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+
+        // 기사 제목을 클릭했을 때 이벤트 처리
+        listView.setOnMouseClicked(event -> {
+            int selectedIndex = listView.getSelectionModel().getSelectedIndex();
+            if (selectedIndex >= 0) {
+                String articleUrl = articleUrls.get(selectedIndex);
+                openArticlePage(articleUrl);
+            }
+        });
+    }
+
+    // 기사 본문 페이지를 열기 위한 메서드
+    private void openArticlePage(String articleUrl) {
+        try {
+            Desktop.getDesktop().browse(new URI(articleUrl));
+        } catch (IOException | URISyntaxException e) {
+            e.printStackTrace();
         }
     }
 
