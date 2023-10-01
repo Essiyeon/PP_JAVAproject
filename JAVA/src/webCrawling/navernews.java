@@ -14,14 +14,17 @@
  * 2023-10-01 First Commit
  * 시스템에서 오늘 날짜를 받아와서 그 날의 기사출력
  * (이전에는 코드를 수정해서 오늘 날짜를 20231001의 형태로 넣어줘야했음)
+ * 2023-10-01 Second Commit
+ * 새로고침버튼 추가 GUI창에서 새로고침버튼을 누르면 코드가 재실행되면서 GUI창도 업데이트됨(업데이트된 기사가 있을 때)
  */
 
 package webCrawling;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.control.Button; // Button 클래스를 가져옵니다.
 import javafx.scene.control.ListView;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.BorderPane; // BorderPane 클래스를 가져옵니다.
 import javafx.stage.Stage;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -35,32 +38,58 @@ import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class navernews extends Application {
 
+    private ListView<String> listView;
+    private ObservableList<String> items;
+    private List<String> articleUrls;
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("네이버 뉴스 크롤러");
 
+        BorderPane root = new BorderPane();
+
         // ListView를 사용하여 결과를 표시할 준비
-        ListView<String> listView = new ListView<>();
-        ObservableList<String> items = FXCollections.observableArrayList();
+        listView = new ListView<>();
+        items = FXCollections.observableArrayList();
         listView.setItems(items);
 
-        StackPane root = new StackPane();
-        root.getChildren().add(listView);
+        // 새로고침 버튼을 추가합니다.
+        Button refreshButton = new Button("새로고침");
+        refreshButton.setOnAction(event -> refresh());
+
+        root.setTop(refreshButton);
+        root.setCenter(listView);
 
         primaryStage.setScene(new Scene(root, 600, 400));
         primaryStage.show();
 
-        int page = 5;
+        // 초기 데이터 로드
+        refresh();
+    }
 
-        List<String> articleUrls = new ArrayList<>();
+    // 데이터를 새로고침하는 메서드
+    private void refresh() {
+        items.clear();
+        articleUrls = new ArrayList<>();
+
+        int page = 3;
+        LocalDate currentDate = LocalDate.now();
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+        String formattedDate = currentDate.format(dateFormatter);
 
         for (int j = 1; j <= page; j++) {
-            String url = "https://news.naver.com/main/list.naver?mode=LS2D&mid=shm&sid1=105&sid2=230&date=20230925&page=" + j;
+            String url = "https://news.naver.com/main/list.naver?mode=LS2D&mid=shm&sid1=105&sid2=230&date=" + formattedDate + "&page=" + j;
 
             try {
                 Document doc = Jsoup.connect(url).get();
@@ -94,15 +123,6 @@ public class navernews extends Application {
                 e.printStackTrace();
             }
         }
-
-        // 기사 제목을 클릭했을 때 이벤트 처리
-        listView.setOnMouseClicked(event -> {
-            int selectedIndex = listView.getSelectionModel().getSelectedIndex();
-            if (selectedIndex >= 0) {
-                String articleUrl = articleUrls.get(selectedIndex);
-                openArticlePage(articleUrl);
-            }
-        });
     }
 
     // 기사 본문 페이지를 열기 위한 메서드
@@ -112,9 +132,5 @@ public class navernews extends Application {
         } catch (IOException | URISyntaxException e) {
             e.printStackTrace();
         }
-    }
-
-    public static void main(String[] args) {
-        launch(args);
     }
 }
