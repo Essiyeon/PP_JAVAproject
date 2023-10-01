@@ -16,6 +16,9 @@
  * (이전에는 코드를 수정해서 오늘 날짜를 20231001의 형태로 넣어줘야했음)
  * 2023-10-01 Second Commit
  * 새로고침버튼 추가 GUI창에서 새로고침버튼을 누르면 코드가 재실행되면서 GUI창도 업데이트됨(업데이트된 기사가 있을 때)
+ * 2023-10-01 3rd Commit
+ * 위 내용 업데이트 이후 GUI 창에서 클릭시에 기사 본문이 열리지않음
+ * 코드 수정과정에서 기사제목 클릭시 이벤트 처리과정부분을 빠트림 깃헙에서 이전 버전 불러서 복구해놓음
  */
 
 package webCrawling;
@@ -123,7 +126,16 @@ public class navernews extends Application {
                 e.printStackTrace();
             }
         }
+     // 기사 제목을 클릭했을 때 이벤트 처리
+        listView.setOnMouseClicked(event -> {
+            int selectedIndex = listView.getSelectionModel().getSelectedIndex();
+            if (selectedIndex >= 0) {
+                String articleUrl = articleUrls.get(selectedIndex);
+                openArticlePage(articleUrl);
+            }
+        });
     }
+    
 
     // 기사 본문 페이지를 열기 위한 메서드
     private void openArticlePage(String articleUrl) {
