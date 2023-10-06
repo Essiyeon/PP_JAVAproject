@@ -19,18 +19,26 @@
  * 2023-10-01 3rd Commit
  * 위 내용 업데이트 이후 GUI 창에서 클릭시에 기사 본문이 열리지않음
  * 코드 수정과정에서 기사제목 클릭시 이벤트 처리과정부분을 빠트림 깃헙에서 이전 버전 불러서 복구해놓음
+ * 
+ * 2023-10-06 First Commit
+ * 뉴스 이미지와 기사를 함께 출력하도록 수정
  */
-
 package webCrawling;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
-import javafx.scene.control.Button; // Button 클래스를 가져옵니다.
+import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
-import javafx.scene.layout.BorderPane; // BorderPane 클래스를 가져옵니다.
+import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.control.ListCell;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.control.Label; // 추가로 Label을 임포트
+import javafx.scene.layout.VBox;
+import javafx.util.Callback;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -48,8 +56,8 @@ import java.util.List;
 
 public class navernews extends Application {
 
-    private ListView<String> listView;
-    private ObservableList<String> items;
+    private ListView<Article> listView; // ListView의 아이템을 Article 객체로 변경
+    private ObservableList<Article> items;
     private List<String> articleUrls;
 
     public static void main(String[] args) {
@@ -79,6 +87,25 @@ public class navernews extends Application {
 
         // 초기 데이터 로드
         refresh();
+    }
+
+    // Article 클래스 정의: 이미지 URL과 기사 제목을 함께 관리
+    public static class Article {
+        private final String imgUrl;
+        private final String title;
+
+        public Article(String imgUrl, String title) {
+            this.imgUrl = imgUrl;
+            this.title = title;
+        }
+
+        public String getImgUrl() {
+            return imgUrl;
+        }
+
+        public String getTitle() {
+            return title;
+        }
     }
 
     // 데이터를 새로고침하는 메서드
@@ -112,13 +139,12 @@ public class navernews extends Application {
                     String imgUrl = imgElement.attr("src");        // 사진링크
                     String title = imgElement.attr("alt");        // 기사제목
 
-                    Document subDoc = Jsoup.connect(articleUrl).get();
 
                     // 결과를 GUI에 추가
-                    items.add(title);
+                    items.add(new Article(imgUrl, title));
                     articleUrls.add(articleUrl);
 
-                    System.out.println(title);
+                    System.out.println(title); //콘솔창출력부
                     System.out.println();
                 }
                 System.out.println(j + " 페이지 크롤링 종료");
@@ -126,7 +152,8 @@ public class navernews extends Application {
                 e.printStackTrace();
             }
         }
-     // 기사 제목을 클릭했을 때 이벤트 처리
+
+        // 기사 제목을 클릭했을 때 이벤트 처리
         listView.setOnMouseClicked(event -> {
             int selectedIndex = listView.getSelectionModel().getSelectedIndex();
             if (selectedIndex >= 0) {
@@ -134,8 +161,30 @@ public class navernews extends Application {
                 openArticlePage(articleUrl);
             }
         });
+
+        // 이미지와 기사 제목을 함께 보여주기 위해 ListCell을 설정
+        listView.setCellFactory(new Callback<ListView<Article>, ListCell<Article>>() {
+            @Override
+            public ListCell<Article> call(ListView<Article> param) {
+                return new ListCell<Article>() {
+                    @Override
+                    protected void updateItem(Article item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null) {
+                            // 이미지를 ImageView로 생성하고 설정
+                            Image image = new Image(item.getImgUrl());
+                            ImageView imageView = new ImageView(image);
+
+                            // 이미지와 기사 제목을 함께 보여주는 VBox 생성
+                            VBox vbox = new VBox(imageView, new Label(item.getTitle()));
+                            vbox.setSpacing(10); // 간격 조정
+                            setGraphic(vbox); // ListCell에 표시
+                        }
+                    }
+                };
+            }
+        });
     }
-    
 
     // 기사 본문 페이지를 열기 위한 메서드
     private void openArticlePage(String articleUrl) {
