@@ -2,7 +2,7 @@
  * 2023-10-06 First Commit
  * GUI창에 Image를 출력하기위한 예시프로그램입니다.
  * 클래스이름을 Image, ImageViwe로 지정했다가
- * 사용되는 javafx안의 라이브러리들과 이름이 겹쳐 인식이안되는 오류가 있었습니다.
+ * 사용되는 javafx안의 라이브러리들과 이름이 겹쳐 인식이안되는 오류가 있었음
  */
 
 package webCrawling;
